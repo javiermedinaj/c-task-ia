@@ -1,0 +1,16 @@
+# Ignore compiled binary
+program
+
+.idea
+
+# Ignore database file
+tareas.db
+
+# Ignore object files
+*.o
+
+# Ignore backup files
+*~
+
+# Ignore config file with sensitive information
+config.h
