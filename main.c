@@ -241,19 +241,47 @@ void agregarTarea(char *descripcion)
 
 void eliminarTarea(int id)
 {
-    if (id > 0 && id <= numTareas)
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    char *err_msg = 0;
+
+    int rc = sqlite3_open("tareas.db", &db);
+    if (rc != SQLITE_OK)
     {
-        for (int i = id - 1; i < numTareas - 1; i++)
-        {
-            tareas[i] = tareas[i + 1];
-        }
-        numTareas--;
-        printf("Tarea eliminada.\n");
+        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    // Verificar si la tarea existe
+    char check_sql[256];
+    snprintf(check_sql, sizeof(check_sql), "SELECT id FROM tareas WHERE id=%d;", id);
+    rc = sqlite3_prepare_v2(db, check_sql, -1, &stmt, 0);
+    
+    if (sqlite3_step(stmt) != SQLITE_ROW)
+    {
+        printf("No existe una tarea con el ID %d\n", id);
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_finalize(stmt);
+
+    // Eliminar la tarea
+    char sql[256];
+    snprintf(sql, sizeof(sql), "DELETE FROM tareas WHERE id=%d;", id);
+
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Error en SQL: %s\n", err_msg);
+        sqlite3_free(err_msg);
     }
     else
     {
-        printf("ID no válido.\n");
+        printf("Tarea eliminada correctamente.\n");
     }
+
+    sqlite3_close(db);
 }
 
 int main()
